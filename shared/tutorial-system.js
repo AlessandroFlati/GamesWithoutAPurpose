@@ -99,7 +99,7 @@ export class TutorialSystem {
     if (element) {
       element.classList.add('tutorial-highlight');
       element.style.position = 'relative';
-      element.style.zIndex = '10001';
+      element.style.zIndex = '9999';
     }
   }
 
@@ -210,7 +210,7 @@ export const tutorialStyles = `
   max-width: 500px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   pointer-events: all;
-  z-index: 10001;
+  z-index: 10002;
 }
 
 .tutorial-header {
