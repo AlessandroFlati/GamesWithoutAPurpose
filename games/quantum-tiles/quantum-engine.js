@@ -100,6 +100,7 @@ export class QuantumTile {
     this.row = row;
     this.col = col;
     this.state = state || new QuantumState(2);
+    this.initialProbabilities = [...this.state.probabilities]; // Store initial state for reset
     this.entangledWith = []; // Array of {tile, type} where type is 'same' or 'opposite'
   }
 
@@ -145,8 +146,22 @@ export class QuantumTile {
     }
   }
 
+  // Update initial probabilities (call this after setting custom probabilities in level setup)
+  updateInitialProbabilities() {
+    this.initialProbabilities = [...this.state.probabilities];
+  }
+
+  // Reset tile to its initial superposition state
+  resetToInitialState() {
+    this.state.isCollapsed = false;
+    this.state.collapsedState = null;
+    this.state.probabilities = [...this.initialProbabilities];
+    // Note: We don't clear entanglement here as it might be needed
+  }
+
   clone() {
     const tile = new QuantumTile(this.row, this.col, this.state.clone());
+    tile.initialProbabilities = [...this.initialProbabilities];
     // Note: entanglement links are not cloned (would need special handling)
     return tile;
   }
@@ -176,12 +191,27 @@ export class QuantumGrid {
     return null;
   }
 
-  measureTile(row, col) {
+  measureTile(row, col, allowRemeasure = true) {
     const tile = this.getTile(row, col);
-    if (tile && !tile.state.isCollapsed) {
+    if (!tile) return null;
+
+    // If already collapsed and remeasurement is allowed, reset to initial superposition first
+    if (tile.state.isCollapsed && allowRemeasure) {
+      tile.resetToInitialState();
+
+      // For entanglement: if tile was entangled, reset entangled partners too
+      tile.entangledWith.forEach(({ tile: entangledTile }) => {
+        if (entangledTile.state.isCollapsed) {
+          entangledTile.resetToInitialState();
+        }
+      });
+    }
+
+    if (!tile.state.isCollapsed) {
       return tile.measure();
     }
-    return tile ? tile.state.collapsedState : null;
+
+    return tile.state.collapsedState;
   }
 
   // Apply interference effect (neighboring superpositions affect probabilities)

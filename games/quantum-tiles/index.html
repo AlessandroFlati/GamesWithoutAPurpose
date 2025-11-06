@@ -162,9 +162,9 @@
                   {{ getStateSymbol(tile.state.collapsedState) }}
                 </div>
 
-                <!-- Show probabilities for debugging/learning -->
-                <div v-if="!tile.state.isCollapsed && tile.state.probabilities.length === 2" class="probability-indicator">
-                  {{ Math.round(tile.state.probabilities[0] * 100) }}%
+                <!-- Show probabilities for learning (always visible) -->
+                <div v-if="tile.initialProbabilities && tile.initialProbabilities.length === 2" class="probability-indicator">
+                  {{ Math.round(tile.initialProbabilities[0] * 100) }}%
                 </div>
               </div>
             </div>
@@ -373,6 +373,9 @@
           // Initialize state
           if (level.initialState) {
             level.initialState(this.grid);
+
+            // Store initial probabilities for all tiles (for re-measurement)
+            this.grid.tiles.flat().forEach(tile => tile.updateInitialProbabilities());
           }
 
           // Setup entanglement
