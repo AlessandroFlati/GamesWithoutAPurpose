@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Games Without A Purpose - Creative Logic Puzzles</title>
+  <link rel="stylesheet" href="shared/common.css">
+  <style>
+    .hero {
+      text-align: center;
+      padding: var(--spacing-xl) 0;
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .game-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: var(--spacing-xl);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      border: 2px solid transparent;
+    }
+
+    .game-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--accent-primary);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .game-card h2 {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .game-icon {
+      font-size: 2rem;
+    }
+
+    .game-topics {
+      list-style: none;
+      margin: var(--spacing-md) 0;
+    }
+
+    .game-topics li {
+      padding: var(--spacing-xs) 0;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .game-topics li::before {
+      content: "→";
+      color: var(--accent-primary);
+      font-weight: bold;
+    }
+
+    .game-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: var(--spacing-lg);
+      padding-top: var(--spacing-md);
+      border-top: 1px solid var(--bg-tertiary);
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--accent-primary);
+    }
+
+    .footer {
+      text-align: center;
+      padding: var(--spacing-xl) 0;
+      border-top: 1px solid var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .games-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>Games Without A Purpose</h1>
+      <p>Learn complex concepts through creative logic puzzles. Each game builds understanding incrementally with tutorials and progressively challenging levels.</p>
+    </div>
+
+    <div class="games-grid">
+      <!-- Quantum Tiles -->
+      <div class="game-card" onclick="location.href='games/quantum-tiles/index.html'">
+        <h2>
+          <span class="game-icon">🌀</span>
+          Quantum Tiles
+        </h2>
+        <p>Learn quantum mechanics through interactive puzzles. Explore superposition, wave function collapse, and entanglement.</p>
+
+        <ul class="game-topics">
+          <li>Superposition: Multiple states simultaneously</li>
+          <li>Wave Function Collapse: Measurement effects</li>
+          <li>Entanglement: Quantum correlations</li>
+        </ul>
+
+        <div class="game-stats">
+          <div class="stat">
+            <span class="stat-value">3</span>
+            <span>Topics</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">15</span>
+            <span>Levels</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">⭐</span>
+            <span>Educational</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Placeholder for future games -->
+      <div class="game-card" style="opacity: 0.5; cursor: not-allowed;" onclick="event.preventDefault()">
+        <h2>
+          <span class="game-icon">🔮</span>
+          Coming Soon
+        </h2>
+        <p>More creative logic games are in development. Each will explore unique concepts and mechanics.</p>
+
+        <div class="game-stats">
+          <div class="stat">
+            <span class="stat-value">?</span>
+            <span>Mystery</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Built with Vue 3, HTML5 Canvas, and passion for education</p>
+      <p>All games run entirely in your browser - no server needed</p>
+    </div>
+  </div>
+</body>
+</html>

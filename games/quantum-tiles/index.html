@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Tiles - Learn Quantum Mechanics</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Level Selector View -->
+    <div v-if="currentView === 'selector'" class="level-selector">
+      <h1 style="text-align: center; margin-bottom: 2rem;">
+        🌀 Quantum Tiles
+      </h1>
+      <p style="text-align: center; max-width: 600px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
+        Learn quantum mechanics through interactive puzzles. Each topic includes a tutorial followed by practice levels.
+      </p>
+
+      <div v-for="topic in topics" :key="topic.id" class="topic-section">
+        <div class="topic-header" :style="{ borderLeft: `4px solid ${topic.color}` }">
+          <div class="topic-icon">{{ topic.icon }}</div>
+          <div class="topic-details" style="flex: 1;">
+            <h2>{{ topic.name }}</h2>
+            <p>{{ topic.description }}</p>
+            <div class="topic-progress">
+              <div class="progress-text">
+                {{ getTopicProgress(topic.id) }}% Complete
+              </div>
+              <div class="progress-bar">
+                <div class="progress-bar-fill" :style="{ width: getTopicProgress(topic.id) + '%' }"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="levels-grid">
+          <div
+            v-for="level in getTopicLevels(topic.id)"
+            :key="`${level.topicId}-${level.levelNumber}`"
+            class="level-card"
+            :class="{
+              tutorial: level.levelNumber === 0,
+              locked: !isLevelUnlocked(level.topicId, level.levelNumber),
+              completed: isLevelCompleted(level.topicId, level.levelNumber)
+            }"
+            @click="selectLevel(level)"
+          >
+            <div class="level-number">
+              {{ level.levelNumber === 0 ? 'Tutorial' : `Level ${level.levelNumber}` }}
+            </div>
+            <h3>{{ level.name }}</h3>
+            <p>{{ level.goalDescription }}</p>
+            <div v-if="isLevelCompleted(level.topicId, level.levelNumber)" style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--success);">
+              Best: {{ getBestScore(level.topicId, level.levelNumber).moves }} moves
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 3rem;">
+        <button @click="goHome" class="secondary">← Back to Games</button>
+      </div>
+    </div>
+
+    <!-- Game View -->
+    <div v-if="currentView === 'game'" class="game-view">
+      <div class="game-header">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button @click="backToSelector" class="back-button">← Levels</button>
+          <h1 class="game-title">
+            <span>{{ currentTopic.icon }}</span>
+            <span>{{ currentLevel.name }}</span>
+          </h1>
+        </div>
+
+        <div class="game-stats">
+          <div class="stat">
+            <span class="stat-label">Moves</span>
+            <span class="stat-value">{{ moves }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Time</span>
+            <span class="stat-value">{{ formatTime(elapsedTime) }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Target</span>
+            <span class="stat-value">{{ currentLevel.optimalMoves }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-main">
+        <div class="level-info">
+          <div class="topic-badge" :style="{ borderColor: currentTopic.color }">
+            <span>{{ currentTopic.icon }}</span>
+            <span>{{ currentTopic.name }}</span>
+          </div>
+          <h2 class="level-title">{{ currentLevel.name }}</h2>
+          <p class="level-description">{{ currentLevel.goalDescription }}</p>
+
+          <div v-if="showHint" class="hint-box">
+            <h4>💡 Hint</h4>
+            <p>{{ currentLevel.hint }}</p>
+          </div>
+        </div>
+
+        <div class="game-grid-container">
+          <!-- Entanglement visualization -->
+          <svg
+            v-if="currentLevel.entanglements"
+            class="entanglement-links"
+            :width="gridPixelWidth"
+            :height="gridPixelHeight"
+            style="position: absolute; top: 0; left: 0;"
+          >
+            <line
+              v-for="(entanglement, idx) in visibleEntanglements"
+              :key="idx"
+              :x1="entanglement.x1"
+              :y1="entanglement.y1"
+              :x2="entanglement.x2"
+              :y2="entanglement.y2"
+              class="entanglement-line"
+              :class="{ opposite: entanglement.type === 'opposite' }"
+            />
+          </svg>
+
+          <!-- Game grid -->
+          <div
+            class="game-grid"
+            :style="{
+              gridTemplateColumns: `repeat(${grid.cols}, 1fr)`,
+              gridTemplateRows: `repeat(${grid.rows}, 1fr)`
+            }"
+          >
+            <div
+              v-for="(tile, idx) in allTiles"
+              :key="idx"
+              class="quantum-tile"
+              :class="{
+                collapsed: tile.state.isCollapsed,
+                entangled: isTileEntangled(tile)
+              }"
+              @click="clickTile(tile)"
+              :style="getTileStyle(tile)"
+            >
+              <div class="tile-content">
+                <div v-if="!tile.state.isCollapsed" class="tile-states">
+                  <div
+                    v-for="(prob, stateIdx) in tile.state.probabilities"
+                    :key="stateIdx"
+                    class="tile-state-layer"
+                    :style="{
+                      background: getStateColor(stateIdx),
+                      opacity: prob
+                    }"
+                  ></div>
+                </div>
+                <div v-else class="tile-collapsed" :style="{ background: getStateColor(tile.state.collapsedState) }">
+                  {{ getStateSymbol(tile.state.collapsedState) }}
+                </div>
+
+                <!-- Show probabilities for debugging/learning -->
+                <div v-if="!tile.state.isCollapsed && tile.state.probabilities.length === 2" class="probability-indicator">
+                  {{ Math.round(tile.state.probabilities[0] * 100) }}%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-panel">
+          <button v-if="currentLevel.isTeaching && !tutorialComplete" @click="startTutorial" class="secondary">
+            📖 Show Tutorial
+          </button>
+          <button @click="resetLevel">🔄 Reset Level</button>
+          <button @click="toggleHint" class="secondary">
+            {{ showHint ? '🙈 Hide Hint' : '💡 Show Hint' }}
+          </button>
+          <button v-if="canUndo" @click="undo" class="secondary">↶ Undo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div v-if="showVictory" class="victory-screen" @click.self="closeVictory">
+      <div class="victory-content">
+        <div class="victory-icon">🎉</div>
+        <h2 class="victory-title">Level Complete!</h2>
+
+        <div class="victory-stats">
+          <div class="stat">
+            <span class="stat-value">{{ moves }}</span>
+            <span class="stat-label">Moves</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ formatTime(finalTime) }}</span>
+            <span class="stat-label">Time</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ currentLevel.optimalMoves }}</span>
+            <span class="stat-label">Target</span>
+          </div>
+        </div>
+
+        <p v-if="moves <= currentLevel.optimalMoves" style="color: var(--success); font-weight: bold;">
+          ⭐ Perfect! You solved it in optimal moves!
+        </p>
+        <p v-else style="color: var(--text-secondary);">
+          Try to beat the target moves for a perfect score!
+        </p>
+
+        <div class="victory-buttons">
+          <button @click="nextLevel" v-if="hasNextLevel">Next Level →</button>
+          <button @click="resetLevel">↺ Retry</button>
+          <button @click="backToSelector" class="secondary">Levels</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tutorial Overlay (injected by tutorial system) -->
+  </div>
+
+  <script type="module">
+    import { QuantumState, QuantumTile, QuantumGrid } from './quantum-engine.js';
+    import { topics, levels } from './levels.js';
+    import { LevelProgression } from '../../shared/level-progression.js';
+    import { TutorialSystem, tutorialStyles } from '../../shared/tutorial-system.js';
+
+    // Inject tutorial styles
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = tutorialStyles;
+    document.head.appendChild(styleSheet);
+
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          currentView: 'selector', // 'selector' or 'game'
+          topics: topics,
+          levels: levels,
+          progression: new LevelProgression('quantum-tiles'),
+          currentLevel: null,
+          currentTopic: null,
+          grid: null,
+          moves: 0,
+          elapsedTime: 0,
+          timer: null,
+          showVictory: false,
+          finalTime: 0,
+          showHint: false,
+          tutorialSystem: null,
+          tutorialComplete: false,
+          history: [], // For undo
+          tileSize: 80,
+          tileGap: 4
+        };
+      },
+
+      computed: {
+        allTiles() {
+          if (!this.grid) return [];
+          return this.grid.tiles.flat();
+        },
+
+        canUndo() {
+          return this.history.length > 0;
+        },
+
+        hasNextLevel() {
+          if (!this.currentLevel) return false;
+          const topicId = this.currentLevel.topicId;
+          const levelNumber = this.currentLevel.levelNumber;
+
+          // Next level in same topic
+          if (levelNumber < 4) {
+            return this.progression.isLevelUnlocked(topicId, levelNumber + 1) ||
+                   this.progression.isLevelCompleted(topicId, levelNumber);
+          }
+
+          // Next topic
+          const nextTopicId = topicId + 1;
+          return nextTopicId < this.topics.length &&
+                 (this.progression.isTopicUnlocked(nextTopicId) ||
+                  this.progression.isLevelCompleted(topicId, levelNumber));
+        },
+
+        gridPixelWidth() {
+          if (!this.grid) return 0;
+          return this.grid.cols * this.tileSize + (this.grid.cols - 1) * this.tileGap + 32;
+        },
+
+        gridPixelHeight() {
+          if (!this.grid) return 0;
+          return this.grid.rows * this.tileSize + (this.grid.rows - 1) * this.tileGap + 32;
+        },
+
+        visibleEntanglements() {
+          if (!this.currentLevel || !this.currentLevel.entanglements || !this.grid) {
+            return [];
+          }
+
+          return this.currentLevel.entanglements
+            .filter(e => {
+              const tile1 = this.grid.getTile(...e.tile1);
+              const tile2 = this.grid.getTile(...e.tile2);
+              return tile1 && tile2 && (!tile1.state.isCollapsed || !tile2.state.isCollapsed);
+            })
+            .map(e => {
+              const [r1, c1] = e.tile1;
+              const [r2, c2] = e.tile2;
+              const padding = 16;
+              const x1 = padding + c1 * (this.tileSize + this.tileGap) + this.tileSize / 2;
+              const y1 = padding + r1 * (this.tileSize + this.tileGap) + this.tileSize / 2;
+              const x2 = padding + c2 * (this.tileSize + this.tileGap) + this.tileSize / 2;
+              const y2 = padding + r2 * (this.tileSize + this.tileGap) + this.tileSize / 2;
+              return { x1, y1, x2, y2, type: e.type };
+            });
+        }
+      },
+
+      methods: {
+        getTopicLevels(topicId) {
+          return this.levels.filter(l => l.topicId === topicId);
+        },
+
+        getTopicProgress(topicId) {
+          return Math.round(this.progression.getTopicCompletion(topicId));
+        },
+
+        isLevelUnlocked(topicId, levelNumber) {
+          return this.progression.isLevelUnlocked(topicId, levelNumber) &&
+                 this.progression.isTopicUnlocked(topicId);
+        },
+
+        isLevelCompleted(topicId, levelNumber) {
+          return this.progression.isLevelCompleted(topicId, levelNumber);
+        },
+
+        getBestScore(topicId, levelNumber) {
+          return this.progression.getBestScore(topicId, levelNumber);
+        },
+
+        selectLevel(level) {
+          if (!this.isLevelUnlocked(level.topicId, level.levelNumber)) {
+            return;
+          }
+
+          this.currentLevel = level;
+          this.currentTopic = this.topics[level.topicId];
+          this.currentView = 'game';
+          this.tutorialComplete = !level.isTeaching;
+          this.initializeLevel();
+
+          if (level.isTeaching && level.tutorial) {
+            setTimeout(() => this.startTutorial(), 500);
+          }
+        },
+
+        initializeLevel() {
+          const level = this.currentLevel;
+
+          // Create grid
+          this.grid = new QuantumGrid(
+            level.gridSize.rows,
+            level.gridSize.cols,
+            level.numStates
+          );
+
+          // Initialize state
+          if (level.initialState) {
+            level.initialState(this.grid);
+          }
+
+          // Setup entanglement
+          if (level.entanglements) {
+            level.entanglements.forEach(e => {
+              this.grid.createEntanglement(...e.tile1, ...e.tile2, e.type);
+            });
+          }
+
+          // Reset stats
+          this.moves = 0;
+          this.elapsedTime = 0;
+          this.showVictory = false;
+          this.showHint = false;
+          this.history = [];
+
+          // Start timer
+          this.startTimer();
+        },
+
+        clickTile(tile) {
+          if (this.showVictory) return;
+
+          // Save state for undo
+          this.history.push({
+            grid: this.grid.clone(),
+            moves: this.moves
+          });
+
+          // Limit history to last 10 moves
+          if (this.history.length > 10) {
+            this.history.shift();
+          }
+
+          // Measure tile
+          this.grid.measureTile(tile.row, tile.col);
+          this.moves++;
+
+          // Check victory
+          setTimeout(() => this.checkVictory(), 100);
+        },
+
+        checkVictory() {
+          const level = this.currentLevel;
+
+          // Check if goal is met
+          let won = false;
+
+          if (level.goalPattern) {
+            won = this.grid.matchesPattern(level.goalPattern);
+          } else {
+            won = this.grid.isFullyCollapsed();
+          }
+
+          if (won) {
+            this.stopTimer();
+            this.finalTime = this.elapsedTime;
+            this.showVictory = true;
+
+            // Save progress
+            this.progression.completeLevel(
+              level.topicId,
+              level.levelNumber,
+              this.moves,
+              this.elapsedTime
+            );
+          }
+        },
+
+        resetLevel() {
+          this.showVictory = false;
+          this.initializeLevel();
+        },
+
+        undo() {
+          if (this.history.length === 0) return;
+
+          const state = this.history.pop();
+          this.grid = state.grid;
+          this.moves = state.moves;
+        },
+
+        toggleHint() {
+          this.showHint = !this.showHint;
+        },
+
+        startTutorial() {
+          if (!this.currentLevel.tutorial) return;
+
+          this.tutorialSystem = new TutorialSystem(
+            this.currentLevel.tutorial.steps,
+            () => {
+              this.tutorialComplete = true;
+            }
+          );
+
+          this.tutorialSystem.start();
+        },
+
+        nextLevel() {
+          const topicId = this.currentLevel.topicId;
+          const levelNumber = this.currentLevel.levelNumber;
+
+          // Try next level in same topic
+          if (levelNumber < 4) {
+            const nextLevel = this.levels.find(
+              l => l.topicId === topicId && l.levelNumber === levelNumber + 1
+            );
+            if (nextLevel) {
+              this.selectLevel(nextLevel);
+              return;
+            }
+          }
+
+          // Try next topic
+          const nextTopicId = topicId + 1;
+          if (nextTopicId < this.topics.length) {
+            const nextLevel = this.levels.find(
+              l => l.topicId === nextTopicId && l.levelNumber === 0
+            );
+            if (nextLevel) {
+              this.selectLevel(nextLevel);
+              return;
+            }
+          }
+
+          // No more levels
+          this.backToSelector();
+        },
+
+        closeVictory() {
+          this.showVictory = false;
+        },
+
+        backToSelector() {
+          this.stopTimer();
+          this.currentView = 'selector';
+          this.currentLevel = null;
+          this.currentTopic = null;
+          this.grid = null;
+        },
+
+        goHome() {
+          window.location.href = '../../index.html';
+        },
+
+        startTimer() {
+          this.stopTimer();
+          this.timer = setInterval(() => {
+            this.elapsedTime++;
+          }, 1000);
+        },
+
+        stopTimer() {
+          if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+          }
+        },
+
+        formatTime(seconds) {
+          const mins = Math.floor(seconds / 60);
+          const secs = seconds % 60;
+          return `${mins}:${secs.toString().padStart(2, '0')}`;
+        },
+
+        getStateColor(stateIdx) {
+          const colors = [
+            'var(--quantum-0)',
+            'var(--quantum-1)',
+            'var(--quantum-2)',
+            'var(--quantum-3)'
+          ];
+          return colors[stateIdx] || colors[0];
+        },
+
+        getStateSymbol(stateIdx) {
+          return `|${stateIdx}⟩`;
+        },
+
+        getTileStyle(tile) {
+          return {};
+        },
+
+        isTileEntangled(tile) {
+          return tile.entangledWith && tile.entangledWith.length > 0 &&
+                 !tile.state.isCollapsed;
+        }
+      },
+
+      beforeUnmount() {
+        this.stopTimer();
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
