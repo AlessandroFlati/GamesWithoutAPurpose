@@ -270,9 +270,27 @@ export const levels = [
       [0, 1, 0, 1],
       [1, 0, 1, 0]
     ],
-    goalDescription: 'Create a checkerboard pattern',
+    // Custom validator to accept both checkerboard variations
+    goalValidator: (grid) => {
+      if (!grid.isFullyCollapsed()) return false;
+
+      const pattern = grid.getCurrentPattern();
+
+      // Check pattern 1: starts with 0
+      const pattern1Matches = pattern.every((row, r) =>
+        row.every((state, c) => state === ((r + c) % 2 === 0 ? 0 : 1))
+      );
+
+      // Check pattern 2: starts with 1 (inverted)
+      const pattern2Matches = pattern.every((row, r) =>
+        row.every((state, c) => state === ((r + c) % 2 === 0 ? 1 : 0))
+      );
+
+      return pattern1Matches || pattern2Matches;
+    },
+    goalDescription: 'Create a checkerboard pattern (either variation)',
     optimalMoves: 16,
-    hint: 'Click tiles until they match the checkerboard pattern'
+    hint: 'Click tiles until they form an alternating checkerboard - either pattern works!'
   },
 
   // Level 1-4: Practice - Specific Pattern

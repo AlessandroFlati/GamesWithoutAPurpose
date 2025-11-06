@@ -448,7 +448,10 @@
           // Check if goal is met
           let won = false;
 
-          if (level.goalPattern) {
+          if (level.goalValidator) {
+            // Custom validation function
+            won = level.goalValidator(this.grid);
+          } else if (level.goalPattern) {
             won = this.grid.matchesPattern(level.goalPattern);
           } else {
             won = this.grid.isFullyCollapsed();
