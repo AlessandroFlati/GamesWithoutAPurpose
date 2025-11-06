@@ -100,6 +100,30 @@
           <h2 class="level-title">{{ currentLevel.name }}</h2>
           <p class="level-description">{{ currentLevel.goalDescription }}</p>
 
+          <!-- Target Pattern Display -->
+          <div v-if="currentLevel.goalPattern" class="target-pattern">
+            <h4>Target Pattern:</h4>
+            <div
+              class="target-grid"
+              :style="{
+                gridTemplateColumns: `repeat(${currentLevel.goalPattern[0].length}, 1fr)`,
+                gridTemplateRows: `repeat(${currentLevel.goalPattern.length}, 1fr)`
+              }"
+            >
+              <template v-for="(row, r) in currentLevel.goalPattern" :key="r">
+                <div
+                  v-for="(state, c) in row"
+                  :key="`${r}-${c}`"
+                  class="target-tile"
+                  :style="{ background: state === -1 ? '#555' : getStateColor(state) }"
+                  :title="state === -1 ? 'Any state' : `State ${state}`"
+                >
+                  {{ state === -1 ? '?' : getStateSymbol(state) }}
+                </div>
+              </template>
+            </div>
+          </div>
+
           <div v-if="showHint" class="hint-box">
             <h4>💡 Hint</h4>
             <p>{{ currentLevel.hint }}</p>

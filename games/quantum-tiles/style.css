@@ -387,6 +387,48 @@
   flex: 1;
 }
 
+/* Target Pattern Display */
+.target-pattern {
+  background: var(--bg-tertiary);
+  padding: var(--spacing-md);
+  border-radius: 8px;
+  border-left: 4px solid var(--accent-primary);
+  margin: var(--spacing-lg) 0;
+  max-width: 600px;
+}
+
+.target-pattern h4 {
+  color: var(--accent-primary);
+  margin-bottom: var(--spacing-sm);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.target-grid {
+  display: grid;
+  gap: 3px;
+  margin-top: var(--spacing-sm);
+  width: fit-content;
+}
+
+.target-tile {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
 /* Hint Box */
 .hint-box {
   background: var(--bg-tertiary);
