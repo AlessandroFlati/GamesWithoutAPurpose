@@ -118,6 +118,10 @@
   position: relative;
   border: 2px solid transparent;
   overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .quantum-tile:hover {
