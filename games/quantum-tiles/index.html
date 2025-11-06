@@ -373,6 +373,9 @@
           // Initialize state
           if (level.initialState) {
             level.initialState(this.grid);
+
+            // Store initial probabilities for all tiles (for re-measurement)
+            this.grid.tiles.flat().forEach(tile => tile.updateInitialProbabilities());
           }
 
           // Setup entanglement
